@@ -1,1 +1,6 @@
 # NeuralAE
+
+
+## requirements
+- pytorch
+- auraloss
