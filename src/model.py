@@ -167,7 +167,9 @@ class ConditionalTCN(torch.nn.Module):
         #     f" or {(self.receptive_field/self.sample_rate)*1e3:0.3f} ms",
         # )
 
-    def forward(self, x, p, **kwargs):
+    def forward(self, x, p=None, **kwargs):
+        if p is None:
+            p = torch.zeros(x.shape[0], self.num_control_params).to(x.device).float()
         # causally pad input signal
         x = torch.nn.functional.pad(x, (self.receptive_field - 1, 0))
 

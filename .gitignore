@@ -1,2 +1,4 @@
 dataset
 .vscode
+__pycache__
+runs
