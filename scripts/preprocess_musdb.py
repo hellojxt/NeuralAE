@@ -10,7 +10,14 @@ import os
 def process_musdb(root_dir="dataset/musdb18", subsets="train", sr=24000, length=5):
     mus = musdb.DB(root=root_dir, subsets=subsets)
     tfm = sox.Transformer()
-    tfm.reverb()
+    tfm.reverb(
+        reverberance=100,
+        high_freq_damping=10,
+        room_scale=100,
+        stereo_depth=100,
+        pre_delay=10,
+        wet_gain=10,
+    )
     file_idx = 0
     output_dir = f"{root_dir}/{args.tag}/{subsets}_patch"
     if not os.path.exists(os.path.dirname(output_dir)):
@@ -23,7 +30,7 @@ def process_musdb(root_dir="dataset/musdb18", subsets="train", sr=24000, length=
         ori_sample_rate = track.targets["vocals"].rate
         vocal = resampy.resample(vocal, ori_sample_rate, sr)
         # clip 65536 samples
-        for i in range(0, len(vocal), sr * length):
+        for i in range(0, len(vocal) - sr * length, sr * length):
             patch = torch.from_numpy(vocal[i : i + sr * length])
             if len(patch) < sr * length:
                 continue
@@ -40,13 +47,22 @@ def process_musdb(root_dir="dataset/musdb18", subsets="train", sr=24000, length=
             torch.save({"x": x, "y": y}, f"{output_dir}/{file_idx}.pt")
             file_idx += 1
 
+            # for quick check
+
+            # tfm.build_file(
+            #     input_array=x.numpy(),
+            #     sample_rate_in=sr,
+            #     output_filepath=f"test.wav",
+            # )
+            # return
+
 
 import argparse
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--sr", type=int, default=24000)
-    parser.add_argument("--length", type=int, default=5)
+    parser.add_argument("--length", type=int, default=3)
     parser.add_argument("--root_dir", type=str, default="dataset/musdb18")
     parser.add_argument("--tag", type=str, default="reverb")
     args = parser.parse_args()
