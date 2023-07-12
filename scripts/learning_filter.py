@@ -14,12 +14,12 @@ writer = SummaryWriter()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_dir", type=str, default="dataset/musdb18/reverb")
-parser.add_argument("--batch_size", type=int, default=8)
+parser.add_argument("--batch_size", type=int, default=32)
 parser.add_argument("--sample_rate", type=int, default=24000)
 parser.add_argument("--nblocks", type=int, default=5)
 parser.add_argument("--kernel_size", type=int, default=13)
 parser.add_argument("--dilation_growth", type=int, default=8)
-parser.add_argument("--channel_width", type=int, default=64)
+parser.add_argument("--channel_width", type=int, default=8)
 parser.add_argument("--noncausal", action="store_true")
 parser.add_argument("--max_epochs", type=int, default=100)
 
@@ -63,6 +63,9 @@ def audio_to_sepctrogram(x):
     return x
 
 
+import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
