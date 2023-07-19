@@ -13,20 +13,20 @@ import torchaudio
 writer = SummaryWriter()
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--data_dir", type=str, default="dataset/musdb18/reverb")
+parser.add_argument("--filter", type=str, default="reverb")
 parser.add_argument("--batch_size", type=int, default=32)
 parser.add_argument("--sample_rate", type=int, default=24000)
 parser.add_argument("--nblocks", type=int, default=5)
 parser.add_argument("--kernel_size", type=int, default=13)
 parser.add_argument("--dilation_growth", type=int, default=8)
-parser.add_argument("--channel_width", type=int, default=8)
+parser.add_argument("--channel_width", type=int, default=16)
 parser.add_argument("--noncausal", action="store_true")
 parser.add_argument("--max_epochs", type=int, default=100)
 
 args = parser.parse_args()
-
-train_dataset = AudioDataset(args.data_dir + "/train_patch")
-test_dataset = AudioDataset(args.data_dir + "/test_patch")
+data_dir = f"dataset/{args.filter}"
+train_dataset = AudioDataset(data_dir + "/train")
+test_dataset = AudioDataset(data_dir + "/test")
 train_loader = torch.utils.data.DataLoader(
     train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4
 )
@@ -88,35 +88,35 @@ def plot_spec(x, y, y_hat):
     fig.tight_layout(pad=0)
     return fig
 
-
+import torchaudio 
+import os
+log_dir = f"{data_dir}/logs"
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
 def log_sample(x, y, y_hat, log_sample_idx):
-    writer.add_audio(
-        f"x_{log_sample_idx}",
-        x[0],
-        epoch,
+    # save audio
+    torchaudio.save(
+        f"{log_dir}/x_{log_sample_idx}.wav",
+        x[0].cpu(),
         sample_rate=args.sample_rate,
     )
-    writer.add_audio(
-        f"y_{log_sample_idx}",
-        y[0],
-        epoch,
+    torchaudio.save(
+        f"{log_dir}/y_{log_sample_idx}.wav",
+        y[0].cpu(),
         sample_rate=args.sample_rate,
     )
-    writer.add_audio(
-        f"y_hat_{log_sample_idx}",
-        y_hat[0],
-        epoch,
+    torchaudio.save(
+        f"{log_dir}/y_hat_{log_sample_idx}.wav",
+        y_hat[0].cpu(),
         sample_rate=args.sample_rate,
     )
-    writer.add_figure(
-        f"spec_{log_sample_idx}",
-        plot_spec(
+    fig = plot_spec(
             audio_to_sepctrogram(x[0]),
             audio_to_sepctrogram(y[0]),
             audio_to_sepctrogram(y_hat[0]),
-        ),
-        epoch,
-    )
+        )
+    # save figure
+    fig.savefig(f"{log_dir}/spec_{log_sample_idx}.png")
 
 
 def step(train=True):

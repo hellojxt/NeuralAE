@@ -14,3 +14,7 @@ sudo apt install sox
 - pesq
 - pyloudnorm
 - resampy
+
+```bash
+pip install tensorboard auraloss
+```

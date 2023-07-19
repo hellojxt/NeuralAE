@@ -3,7 +3,6 @@ import torch
 import os
 from glob import glob
 
-
 class AudioDataset(data.Dataset):
     def __init__(self, data_dir):
         self.data_dir = data_dir
