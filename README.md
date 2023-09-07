@@ -2,19 +2,7 @@
 
 
 ## requirements
-```bash
-sudo apt install sox
-```
-
 - pytorch
 - tensorboard
+- torchsummary
 - auraloss
-- musdb
-- pysox
-- pesq
-- pyloudnorm
-- resampy
-
-```bash
-pip install tensorboard auraloss
-```

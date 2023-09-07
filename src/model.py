@@ -51,7 +51,7 @@ class FiLM(torch.nn.Module):
 
 class ConditionalTCNBlock(torch.nn.Module):
     def __init__(
-        self, in_ch, out_ch, cond_dim, kernel_size=3, dilation=1, causal=False, **kwargs
+        self, in_ch, out_ch, cond_dim, kernel_size=3, dilation=1, causal=False, condition = True, **kwargs
     ):
         super().__init__()
 
@@ -60,6 +60,7 @@ class ConditionalTCNBlock(torch.nn.Module):
         self.kernel_size = kernel_size
         self.dilation = dilation
         self.causal = causal
+        self.condition = condition
 
         self.conv1 = torch.nn.Conv1d(
             in_ch,
@@ -77,9 +78,9 @@ class ConditionalTCNBlock(torch.nn.Module):
 
     def forward(self, x, p):
         x_in = x
-
         x = self.conv1(x)
-        x = self.film(x, p)  # apply FiLM conditioning
+        if self.condition:
+            x = self.film(x, p)  # apply FiLM conditioning
         x = self.relu(x)
         x_res = self.res(x_in)
 
@@ -87,7 +88,6 @@ class ConditionalTCNBlock(torch.nn.Module):
             x = x + causal_crop(x_res, x.shape[-1])
         else:
             x = x + center_crop(x_res, x.shape[-1])
-
         return x
 
 
@@ -121,6 +121,7 @@ class ConditionalTCN(torch.nn.Module):
         stack_size=10,
         causal=False,
         skip_connections=False,
+        condition = True,
         **kwargs,
     ):
         super().__init__()
@@ -135,6 +136,7 @@ class ConditionalTCN(torch.nn.Module):
         self.stack_size = stack_size
         self.causal = causal
         self.skip_connections = skip_connections
+        self.condition = condition
         self.sample_rate = sample_rate
 
         self.blocks = torch.nn.ModuleList()
@@ -157,6 +159,7 @@ class ConditionalTCN(torch.nn.Module):
                     dilation=dilation,
                     padding="same" if self.causal else "valid",
                     causal=self.causal,
+                    condition = self.condition,
                 )
             )
 
@@ -168,6 +171,7 @@ class ConditionalTCN(torch.nn.Module):
         )
 
     def forward(self, x, p=None, **kwargs):
+        x_in = x
         if p is None:
             p = torch.zeros(x.shape[0], self.num_control_params).to(x.device).float()
         # causally pad input signal
@@ -185,7 +189,7 @@ class ConditionalTCN(torch.nn.Module):
                 skips = 0
 
         # final 1x1 convolution to collapse channels
-        out = self.output(x + skips)
+        out = self.output(x + skips) + x_in
 
         return out
 
